@@ -75,3 +75,9 @@ coverage/
 memory-bank
 projectBrief.md
 CLAUDE.local.md
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.egg-info/
+.cortex/

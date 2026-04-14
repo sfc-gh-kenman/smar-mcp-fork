@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smar-cli"
+version = "1.0.0"
+description = "Read-only Smartsheet project status CLI"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.28.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+# Enables secure token storage in the OS keychain via `smar-cli login`.
+# Uses macOS Keychain, Windows Credential Manager, or Linux Secret Service.
+# Install with: pip install "smar-cli[keyring]"
+keyring = ["keyring>=23.0.0"]
+
+[project.scripts]
+smar-cli = "smar_cli:main"
+
+[tool.setuptools]
+py-modules = ["smar_cli"]
