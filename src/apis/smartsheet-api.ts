@@ -89,6 +89,7 @@ export class SmartsheetAPI {
           method,
           url: url.toString(),
           data,
+          timeout: 30000,
           headers: {
             'Authorization': `Bearer ${this.accessToken}`,
             'Content-Type': 'application/json',

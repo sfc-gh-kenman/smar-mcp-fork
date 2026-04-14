@@ -253,13 +253,16 @@ export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDelete
       // Tool: Add Rows
       server.tool(
         "add_rows",
-        "Adds new rows to a sheet",
+        "Adds new rows to a sheet. Use parentId to nest rows inside a parent row (required for hierarchical sheets). Use siblingId + above to place rows relative to a specific sibling.",
         {
           sheetId: z.string().describe("The ID of the sheet"),
           rows: z.array(
             z.object({
               toTop: z.boolean().optional().describe("Add row to the top of the sheet"),
               toBottom: z.boolean().optional().describe("Add row to the bottom of the sheet"),
+              parentId: z.number().optional().describe("ID of the parent row — inserts as a child (required for correct nesting in hierarchical sheets)"),
+              siblingId: z.number().optional().describe("ID of the sibling row to insert adjacent to. Combined with 'above' to control placement. Without parentId, uses the sibling's indentation level."),
+              above: z.boolean().optional().describe("When true, inserts above the siblingId row instead of below"),
               cells: z.array(
                 z.object({
                   columnId: z.number().or(z.string()).describe("Column ID"),
