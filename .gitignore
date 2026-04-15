@@ -80,4 +80,3 @@ CLAUDE.local.md
 __pycache__/
 *.pyc
 *.egg-info/
-.cortex/
