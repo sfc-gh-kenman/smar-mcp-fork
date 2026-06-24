@@ -90,4 +90,12 @@ export class SmartsheetDiscussionAPI {
     return this.api.request('POST', `/sheets/${sheetId}/rows/${rowId}/discussions`, data);
   }
 
+  async getDiscussion(sheetId: string, discussionId: string): Promise<any> {
+    return this.api.request('GET', `/sheets/${sheetId}/discussions/${discussionId}`);
+  }
+
+  async addComment(sheetId: string, discussionId: string, text: string): Promise<any> {
+    return this.api.request('POST', `/sheets/${sheetId}/discussions/${discussionId}/comments`, { text });
+  }
+
 }

@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDeleteTools: boolean) {
 
+    // @ts-ignore TS2589 — inference depth limit with MCP SDK overloads
     server.tool(
       "get_sheet",
       "Retrieves the current state of a sheet, including rows, columns, and cells",
@@ -468,5 +469,112 @@ export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDelete
           }
         }
       );
+
+    // Tool: get_columns
+    server.tool(
+      "get_columns",
+      "Retrieves all columns in a sheet",
+      { sheetId: z.string().describe("ID of the sheet"), includeAll: z.boolean().optional().describe("Return all columns without pagination") },
+      async ({ sheetId, includeAll }) => {
+        try {
+          const result = await api.sheets.getColumns(sheetId, includeAll);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          return { content: [{ type: "text", text: `Failed to get columns: ${error.message}` }], isError: true };
+        }
+      }
+    );
+
+    // Tool: add_columns
+    server.tool(
+      "add_columns",
+      "Adds one or more columns to a sheet",
+      {
+        sheetId: z.string().describe("ID of the sheet"),
+        columns: z.array(z.object({
+          title: z.string().describe("Column title"),
+          type: z.string().optional().describe("Column type (e.g., TEXT_NUMBER, DATE, PICKLIST)"),
+          index: z.number().optional().describe("Position to insert the column (0-based)"),
+        })).describe("Array of column definitions to add"),
+      },
+      async ({ sheetId, columns }) => {
+        try {
+          const result = await api.sheets.addColumns(sheetId, columns);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          return { content: [{ type: "text", text: `Failed to add columns: ${error.message}` }], isError: true };
+        }
+      }
+    );
+
+    // Tool: get_sheet_summary
+    server.tool(
+      "get_sheet_summary",
+      "Retrieves the summary fields of a sheet",
+      { sheetId: z.string().describe("ID of the sheet"), include: z.string().optional().describe("Comma-separated list of elements to include (e.g., 'writerInfo')") },
+      async ({ sheetId, include }) => {
+        try {
+          const result = await api.sheets.getSheetSummary(sheetId, include);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          return { content: [{ type: "text", text: `Failed to get sheet summary: ${error.message}` }], isError: true };
+        }
+      }
+    );
+
+    // Tool: create_sheet_in_folder
+    server.tool(
+      "create_sheet_in_folder",
+      "Creates a new sheet inside a specific folder",
+      {
+        folderId: z.string().describe("ID of the folder to create the sheet in"),
+        name: z.string().describe("Name of the new sheet"),
+        columns: z.array(z.object({ title: z.string(), type: z.string().optional() })).optional().describe("Optional initial columns"),
+      },
+      async ({ folderId, name, columns }) => {
+        try {
+          const result = await api.folders.createSheetInFolder(folderId, name, columns);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          return { content: [{ type: "text", text: `Failed to create sheet in folder: ${error.message}` }], isError: true };
+        }
+      }
+    );
+
+    // Tool: create_sheet_in_workspace
+    server.tool(
+      "create_sheet_in_workspace",
+      "Creates a new sheet inside a specific workspace",
+      {
+        workspaceId: z.string().describe("ID of the workspace to create the sheet in"),
+        name: z.string().describe("Name of the new sheet"),
+        columns: z.array(z.object({ title: z.string(), type: z.string().optional() })).optional().describe("Optional initial columns"),
+      },
+      async ({ workspaceId, name, columns }) => {
+        try {
+          const result = await api.workspaces.createSheetInWorkspace(workspaceId, name, columns);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          return { content: [{ type: "text", text: `Failed to create sheet in workspace: ${error.message}` }], isError: true };
+        }
+      }
+    );
+
+    // Tool: get_resource_guide
+    server.tool(
+      "get_resource_guide",
+      "Returns guidance on available Smartsheet MCP tools and common usage patterns",
+      {},
+      async () => {
+        const guide = {
+          description: "Smartsheet MCP Server — available tool categories",
+          read: ["get_sheet", "get_sheet_by_url", "get_row", "get_columns", "get_sheet_summary", "get_folder", "browse_folder", "get_workspace", "browse_workspace", "get_workspaces", "list_workspaces", "get_report", "get_report_by_url", "get_dashboard", "get_dashboard_by_url", "get_discussion", "get_discussions_by_sheet_id", "get_discussions_by_row_id", "list_row_discussions", "get_cell_history", "get_current_user", "get_user"],
+          write: ["add_rows", "update_rows", "delete_rows", "add_columns", "create_sheet_in_folder", "create_sheet_in_workspace", "create_sheet", "create_folder", "create_workspace", "create_row_discussion", "create_discussion_on_row", "create_sheet_discussion", "add_comment", "create_update_request"],
+          search: ["search", "search_sheets", "search_in_sheet", "search_workspaces", "search_folders", "search_reports", "search_dashboards"],
+          tip: "Use get_workspaces or list_workspaces to discover sheet IDs, then get_sheet to read content.",
+        };
+        return { content: [{ type: "text", text: JSON.stringify(guide, null, 2) }] };
+      }
+    );
 
 }

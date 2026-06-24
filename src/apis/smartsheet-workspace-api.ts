@@ -62,4 +62,8 @@ export class SmartsheetWorkspaceAPI {
     
     return this.api.request('POST', `/workspaces/${workspaceId}/folders`, data);
   }
+
+  async createSheetInWorkspace(workspaceId: string, name: string, columns?: object[]): Promise<any> {
+    return this.api.request('POST', `/workspaces/${workspaceId}/sheets`, { name, columns: columns ?? [] });
+  }
 }

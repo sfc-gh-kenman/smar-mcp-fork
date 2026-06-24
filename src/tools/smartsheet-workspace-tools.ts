@@ -107,4 +107,34 @@ export function getWorkspaceTools(server: McpServer, api: SmartsheetAPI) {
         }
     );
 
+    // Alias: list_workspaces (official MCP name for get_workspaces)
+    server.tool(
+        "list_workspaces",
+        "Lists all workspaces (alias for get_workspaces)",
+        {},
+        async () => {
+            try {
+                const workspaces = await api.workspaces.getWorkspaces();
+                return { content: [{ type: "text", text: JSON.stringify(workspaces, null, 2) }] };
+            } catch (error: any) {
+                return { content: [{ type: "text", text: `Failed to list workspaces: ${error.message}` }], isError: true };
+            }
+        }
+    );
+
+    // Alias: browse_workspace (official MCP name for get_workspace)
+    server.tool(
+        "browse_workspace",
+        "Retrieves a workspace and its contents (alias for get_workspace)",
+        { workspaceId: z.string().describe("ID of the workspace to browse") },
+        async ({ workspaceId }) => {
+            try {
+                const workspace = await api.workspaces.getWorkspace(workspaceId);
+                return { content: [{ type: "text", text: JSON.stringify(workspace, null, 2) }] };
+            } catch (error: any) {
+                return { content: [{ type: "text", text: `Failed to browse workspace: ${error.message}` }], isError: true };
+            }
+        }
+    );
+
 }

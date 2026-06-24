@@ -110,5 +110,20 @@ export function getFolderTools(server: McpServer, api: SmartsheetAPI) {
         }
         }
     );
+    // Alias: browse_folder (official MCP name for get_folder)
+    server.tool(
+        "browse_folder",
+        "Retrieves a folder and its contents (alias for get_folder)",
+        { folderId: z.string().describe("ID of the folder to browse") },
+        async ({ folderId }) => {
+            try {
+                const folder = await api.folders.getFolder(folderId);
+                return { content: [{ type: "text", text: JSON.stringify(folder, null, 2) }] };
+            } catch (error: any) {
+                return { content: [{ type: "text", text: `Failed to browse folder: ${error.message}` }], isError: true };
+            }
+        }
+    );
 
 }
+

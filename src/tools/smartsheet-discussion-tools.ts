@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export function getDiscussionTools(server: McpServer, api: SmartsheetAPI) {
 
+    // @ts-ignore TS2589 — inference depth limit with MCP SDK overloads
     // Tool: Get discussions by sheet ID
     server.tool(
         "get_discussions_by_sheet_id",
@@ -152,6 +153,82 @@ export function getDiscussionTools(server: McpServer, api: SmartsheetAPI) {
                     ],
                     isError: true
                 };
+            }
+        }
+    );
+
+    // Alias: create_discussion_on_row (official MCP name)
+    // @ts-ignore TS2589 — inference depth limit with MCP SDK overloads
+    server.tool(
+        "create_discussion_on_row",
+        "Creates a new discussion on a row (alias for create_row_discussion)",
+        {
+            sheetId: z.string().describe("ID of the sheet"),
+            rowId: z.string().describe("ID of the row"),
+            commentText: z.string().describe("Text of the comment to add")
+        },
+        async ({ sheetId, rowId, commentText }) => {
+            try {
+                const discussion = await api.discussions.createRowDiscussion(sheetId, rowId, commentText);
+                return { content: [{ type: "text", text: JSON.stringify(discussion, null, 2) }] };
+            } catch (error: any) {
+                return { content: [{ type: "text", text: `Failed to create discussion: ${error.message}` }], isError: true };
+            }
+        }
+    );
+
+    // Alias: list_row_discussions (official MCP name)
+    server.tool(
+        "list_row_discussions",
+        "Lists discussions on a row (alias for get_discussions_by_row_id)",
+        {
+            sheetId: z.string().describe("ID of the sheet"),
+            rowId: z.string().describe("ID of the row"),
+            includeAll: z.boolean().optional().describe("Whether to include all results"),
+        },
+        async ({ sheetId, rowId, includeAll }) => {
+            try {
+                const discussions = await api.discussions.getDiscussionsByRowId(sheetId, rowId, undefined, undefined, undefined, includeAll);
+                return { content: [{ type: "text", text: JSON.stringify(discussions, null, 2) }] };
+            } catch (error: any) {
+                return { content: [{ type: "text", text: `Failed to list discussions: ${error.message}` }], isError: true };
+            }
+        }
+    );
+
+    // Tool: get_discussion
+    server.tool(
+        "get_discussion",
+        "Retrieves a specific discussion by ID",
+        {
+            sheetId: z.string().describe("ID of the sheet"),
+            discussionId: z.string().describe("ID of the discussion"),
+        },
+        async ({ sheetId, discussionId }) => {
+            try {
+                const discussion = await api.discussions.getDiscussion(sheetId, discussionId);
+                return { content: [{ type: "text", text: JSON.stringify(discussion, null, 2) }] };
+            } catch (error: any) {
+                return { content: [{ type: "text", text: `Failed to get discussion: ${error.message}` }], isError: true };
+            }
+        }
+    );
+
+    // Tool: add_comment
+    server.tool(
+        "add_comment",
+        "Adds a comment to an existing discussion",
+        {
+            sheetId: z.string().describe("ID of the sheet"),
+            discussionId: z.string().describe("ID of the discussion to comment on"),
+            text: z.string().describe("Text of the comment"),
+        },
+        async ({ sheetId, discussionId, text }) => {
+            try {
+                const comment = await api.discussions.addComment(sheetId, discussionId, text);
+                return { content: [{ type: "text", text: JSON.stringify(comment, null, 2) }] };
+            } catch (error: any) {
+                return { content: [{ type: "text", text: `Failed to add comment: ${error.message}` }], isError: true };
             }
         }
     );

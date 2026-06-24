@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export function getUpdateRequestTools(server: McpServer, api: SmartsheetAPI) {
 
+    // @ts-ignore TS2589 — inference depth limit with MCP SDK overloads
     // Tool: Create Update Request
     server.tool(
       "create_update_request",

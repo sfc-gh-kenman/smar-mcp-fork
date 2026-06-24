@@ -32,4 +32,8 @@ export class SmartsheetFolderAPI {
   async getFolder(folderId: string): Promise<any> {
     return this.api.request('GET', `/folders/${folderId}`);
   }
+
+  async createSheetInFolder(folderId: string, name: string, columns?: object[]): Promise<any> {
+    return this.api.request('POST', `/folders/${folderId}/sheets`, { name, columns: columns ?? [] });
+  }
 }

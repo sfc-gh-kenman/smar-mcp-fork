@@ -76,5 +76,9 @@ export class SmartsheetSearchAPI {
       scopes: 'sightNames' 
     });
   }
+
+  async search(query: string, scopes?: string): Promise<any> {
+    return this.api.request('GET', `/search`, undefined, { query, scopes });
+  }
   
 }

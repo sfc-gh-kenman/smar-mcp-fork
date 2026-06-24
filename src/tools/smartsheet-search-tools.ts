@@ -340,4 +340,22 @@ export function getSearchTools(server: McpServer, api: SmartsheetAPI) {
         }
     );
 
+    // Tool: search (unified, official MCP name)
+    server.tool(
+        "search",
+        "Searches across all Smartsheet objects (sheets, workspaces, folders, reports, dashboards). Optionally scope with the scopes parameter.",
+        {
+            query: z.string().describe("Text to search for"),
+            scopes: z.string().optional().describe("Comma-separated scopes to limit search (e.g., 'sheetNames,cellData,folderNames,workspaceNames,reportNames,sightNames'). Omit for all."),
+        },
+        async ({ query, scopes }) => {
+            try {
+                const results = await api.search.search(query, scopes);
+                return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
+            } catch (error: any) {
+                return { content: [{ type: "text", text: `Failed to search: ${error.message}` }], isError: true };
+            }
+        }
+    );
+
 }

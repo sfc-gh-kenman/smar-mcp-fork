@@ -204,4 +204,16 @@ export class SmartsheetSheetAPI {
   ): Promise<any> {
     return this.api.request('POST', `/sheets/${sheetId}/updaterequests`, options);
   }
+
+  async getColumns(sheetId: string, includeAll?: boolean): Promise<any> {
+    return this.api.request('GET', `/sheets/${sheetId}/columns`, undefined, { includeAll });
+  }
+
+  async addColumns(sheetId: string, columns: object[]): Promise<any> {
+    return this.api.request('POST', `/sheets/${sheetId}/columns`, columns);
+  }
+
+  async getSheetSummary(sheetId: string, include?: string): Promise<any> {
+    return this.api.request('GET', `/sheets/${sheetId}/summary`, undefined, { include });
+  }
 }
