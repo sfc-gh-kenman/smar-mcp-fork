@@ -216,4 +216,8 @@ export class SmartsheetSheetAPI {
   async getSheetSummary(sheetId: string, include?: string): Promise<any> {
     return this.api.request('GET', `/sheets/${sheetId}/summary`, undefined, { include });
   }
+
+  async deleteColumn(sheetId: string, columnId: string): Promise<any> {
+    return this.api.request('DELETE', `/sheets/${sheetId}/columns/${columnId}`);
+  }
 }

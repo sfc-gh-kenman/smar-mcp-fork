@@ -343,6 +343,26 @@ export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDelete
       } else {
         console.warn("Delete operations are disabled. Set ALLOW_DELETE_TOOLS=true to enable them.");
       }
+
+      // Tool: delete_column (conditionally registered)
+      if (allowDeleteTools) {
+        server.tool(
+          "delete_column",
+          "Deletes a column from a sheet. Requires ALLOW_DELETE_TOOLS=true.",
+          {
+            sheetId: z.string().describe("ID of the sheet"),
+            columnId: z.string().describe("ID of the column to delete"),
+          },
+          async ({ sheetId, columnId }) => {
+            try {
+              const result = await api.sheets.deleteColumn(sheetId, columnId);
+              return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+            } catch (error: any) {
+              return { content: [{ type: "text", text: `Failed to delete column: ${error.message}` }], isError: true };
+            }
+          }
+        );
+      }
       
       // Tool: Get Sheet Location
       server.tool(
