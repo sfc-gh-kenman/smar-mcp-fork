@@ -98,4 +98,8 @@ export class SmartsheetDiscussionAPI {
     return this.api.request('POST', `/sheets/${sheetId}/discussions/${discussionId}/comments`, { text });
   }
 
+  async deleteDiscussion(sheetId: string, discussionId: string): Promise<any> {
+    return this.api.request('DELETE', `/sheets/${sheetId}/discussions/${discussionId}`);
+  }
+
 }

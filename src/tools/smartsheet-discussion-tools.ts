@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SmartsheetAPI } from "../apis/smartsheet-api.js";
 import { z } from "zod";
 
-export function getDiscussionTools(server: McpServer, api: SmartsheetAPI) {
+export function getDiscussionTools(server: McpServer, api: SmartsheetAPI, allowDeleteTools: boolean = false) {
 
     // @ts-ignore TS2589 — inference depth limit with MCP SDK overloads
     // Tool: Get discussions by sheet ID
@@ -232,5 +232,25 @@ export function getDiscussionTools(server: McpServer, api: SmartsheetAPI) {
             }
         }
     );
+
+    // Tool: delete_discussion (gated by allowDeleteTools)
+    if (allowDeleteTools) {
+        server.tool(
+            "delete_discussion",
+            "Deletes a discussion and all its comments. Requires ALLOW_DELETE_TOOLS=true.",
+            {
+                sheetId: z.string().describe("ID of the sheet"),
+                discussionId: z.string().describe("ID of the discussion to delete"),
+            },
+            async ({ sheetId, discussionId }) => {
+                try {
+                    const result = await api.discussions.deleteDiscussion(sheetId, discussionId);
+                    return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+                } catch (error: any) {
+                    return { content: [{ type: "text", text: `Failed to delete discussion: ${error.message}` }], isError: true };
+                }
+            }
+        );
+    }
 
 }

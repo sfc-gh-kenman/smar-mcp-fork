@@ -32,7 +32,7 @@ const server = new McpServer({
 const api = new SmartsheetAPI(process.env.SMARTSHEET_API_KEY, process.env.SMARTSHEET_ENDPOINT);
 
 // Tool: Discussion tools
-getDiscussionTools(server, api);
+getDiscussionTools(server, api, allowDeleteTools);
 
 // Tool: Folder tools
 getFolderTools(server, api);

@@ -549,7 +549,7 @@ export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDelete
       {
         folderId: z.string().describe("ID of the folder to create the sheet in"),
         name: z.string().describe("Name of the new sheet"),
-        columns: z.array(z.object({ title: z.string(), type: z.string().optional() })).optional().describe("Optional initial columns"),
+        columns: z.array(z.object({ title: z.string(), type: z.string().optional(), primary: z.boolean().optional(), index: z.number().optional() })).optional().describe("Optional initial columns. Include primary: true on the first column."),
       },
       async ({ folderId, name, columns }) => {
         try {
@@ -568,7 +568,7 @@ export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDelete
       {
         workspaceId: z.string().describe("ID of the workspace to create the sheet in"),
         name: z.string().describe("Name of the new sheet"),
-        columns: z.array(z.object({ title: z.string(), type: z.string().optional() })).optional().describe("Optional initial columns"),
+        columns: z.array(z.object({ title: z.string(), type: z.string().optional(), primary: z.boolean().optional(), index: z.number().optional() })).optional().describe("Optional initial columns. Include primary: true on the first column."),
       },
       async ({ workspaceId, name, columns }) => {
         try {
