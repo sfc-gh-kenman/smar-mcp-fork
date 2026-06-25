@@ -344,6 +344,23 @@ export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDelete
         console.warn("Delete operations are disabled. Set ALLOW_DELETE_TOOLS=true to enable them.");
       }
 
+      // Tool: delete_sheet (conditionally registered)
+      if (allowDeleteTools) {
+        server.tool(
+          "delete_sheet",
+          "Permanently deletes a sheet. Requires ALLOW_DELETE_TOOLS=true.",
+          { sheetId: z.string().describe("ID of the sheet to delete") },
+          async ({ sheetId }) => {
+            try {
+              const result = await api.sheets.deleteSheet(sheetId);
+              return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+            } catch (error: any) {
+              return { content: [{ type: "text", text: `Failed to delete sheet: ${error.message}` }], isError: true };
+            }
+          }
+        );
+      }
+
       // Tool: delete_column (conditionally registered)
       if (allowDeleteTools) {
         server.tool(
@@ -588,12 +605,83 @@ export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDelete
       async () => {
         const guide = {
           description: "Smartsheet MCP Server — available tool categories",
-          read: ["get_sheet", "get_sheet_by_url", "get_row", "get_columns", "get_sheet_summary", "get_folder", "browse_folder", "get_workspace", "browse_workspace", "get_workspaces", "list_workspaces", "get_report", "get_report_by_url", "get_dashboard", "get_dashboard_by_url", "get_discussion", "get_discussions_by_sheet_id", "get_discussions_by_row_id", "list_row_discussions", "get_cell_history", "get_current_user", "get_user"],
-          write: ["add_rows", "update_rows", "delete_rows", "add_columns", "create_sheet_in_folder", "create_sheet_in_workspace", "create_sheet", "create_folder", "create_workspace", "create_row_discussion", "create_discussion_on_row", "create_sheet_discussion", "add_comment", "create_update_request"],
+          read: ["get_sheet", "get_sheet_by_url", "get_row", "get_columns", "get_sheet_summary", "find_in_sheet", "list_shares", "get_folder", "browse_folder", "get_workspace", "browse_workspace", "get_workspaces", "list_workspaces", "get_report", "get_report_by_url", "get_dashboard", "get_dashboard_by_url", "get_discussion", "get_discussions_by_sheet_id", "get_discussions_by_row_id", "list_row_discussions", "get_cell_history", "get_current_user", "get_user"],
+          write: ["add_rows", "update_rows", "delete_rows", "delete_sheet", "add_columns", "delete_column", "attach_url", "create_report", "create_sheet_in_folder", "create_sheet_in_workspace", "create_sheet", "create_folder", "create_workspace", "create_row_discussion", "create_discussion_on_row", "create_sheet_discussion", "add_comment", "delete_discussion", "create_update_request"],
           search: ["search", "search_sheets", "search_in_sheet", "search_workspaces", "search_folders", "search_reports", "search_dashboards"],
           tip: "Use get_workspaces or list_workspaces to discover sheet IDs, then get_sheet to read content.",
         };
         return { content: [{ type: "text", text: JSON.stringify(guide, null, 2) }] };
+      }
+    );
+
+    // Tool: find_in_sheet
+    server.tool(
+      "find_in_sheet",
+      "Searches for text within a specific sheet, returning matching cells with row/column context",
+      {
+        sheetId: z.string().describe("ID of the sheet to search"),
+        query: z.string().describe("Text to search for"),
+      },
+      async ({ sheetId, query }) => {
+        try {
+          const result = await api.sheets.findInSheet(sheetId, query);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          return { content: [{ type: "text", text: `Failed to find in sheet: ${error.message}` }], isError: true };
+        }
+      }
+    );
+
+    // Tool: list_shares
+    server.tool(
+      "list_shares",
+      "Lists the groups and users that a sheet is shared with",
+      { sheetId: z.string().describe("ID of the sheet") },
+      async ({ sheetId }) => {
+        try {
+          const result = await api.sheets.listShares(sheetId);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          return { content: [{ type: "text", text: `Failed to list shares: ${error.message}` }], isError: true };
+        }
+      }
+    );
+
+    // Tool: attach_url
+    server.tool(
+      "attach_url",
+      "Attaches a URL link to a sheet or row",
+      {
+        sheetId: z.string().describe("ID of the sheet"),
+        url: z.string().describe("URL to attach"),
+        name: z.string().describe("Display name for the link"),
+        rowId: z.string().optional().describe("Row ID to attach to (omit to attach to the sheet)"),
+      },
+      async ({ sheetId, url, name, rowId }) => {
+        try {
+          const result = await api.sheets.attachUrl(sheetId, url, name, rowId);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          return { content: [{ type: "text", text: `Failed to attach URL: ${error.message}` }], isError: true };
+        }
+      }
+    );
+
+    // Tool: create_report
+    server.tool(
+      "create_report",
+      "Creates a new report that aggregates data from one or more source sheets",
+      {
+        name: z.string().describe("Name for the new report"),
+        sourceSheetIds: z.array(z.string()).describe("Array of sheet IDs to include in the report"),
+      },
+      async ({ name, sourceSheetIds }) => {
+        try {
+          const result = await api.sheets.createReport(name, sourceSheetIds);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          return { content: [{ type: "text", text: `Failed to create report: ${error.message}` }], isError: true };
+        }
       }
     );
 

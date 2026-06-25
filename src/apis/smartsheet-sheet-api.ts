@@ -220,4 +220,30 @@ export class SmartsheetSheetAPI {
   async deleteColumn(sheetId: string, columnId: string): Promise<any> {
     return this.api.request('DELETE', `/sheets/${sheetId}/columns/${columnId}`);
   }
+
+  async deleteSheet(sheetId: string): Promise<any> {
+    return this.api.request('DELETE', `/sheets/${sheetId}`);
+  }
+
+  async findInSheet(sheetId: string, query: string): Promise<any> {
+    return this.api.request('GET', `/sheets/${sheetId}/find`, undefined, { query });
+  }
+
+  async listShares(sheetId: string): Promise<any> {
+    return this.api.request('GET', `/sheets/${sheetId}/shares`);
+  }
+
+  async attachUrl(sheetId: string, url: string, name: string, rowId?: string): Promise<any> {
+    const endpoint = rowId
+      ? `/sheets/${sheetId}/rows/${rowId}/attachments`
+      : `/sheets/${sheetId}/attachments`;
+    return this.api.request('POST', endpoint, { attachmentType: 'LINK', url, name });
+  }
+
+  async createReport(name: string, sourceSheetIds: string[]): Promise<any> {
+    return this.api.request('POST', `/reports`, {
+      name,
+      scope: { sheetIds: sourceSheetIds.map(Number) }
+    });
+  }
 }
