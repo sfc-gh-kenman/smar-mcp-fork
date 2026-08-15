@@ -233,6 +233,18 @@ export class SmartsheetSheetAPI {
     return this.api.request('GET', `/sheets/${sheetId}/shares`);
   }
 
+  async shareSheet(sheetId: string, email: string, accessLevel: string, ccMe?: boolean): Promise<any> {
+    return this.api.request('POST', `/sheets/${sheetId}/shares`, { email, accessLevel }, ccMe ? { ccMe } : undefined);
+  }
+
+  async updateShare(sheetId: string, shareId: string, accessLevel: string): Promise<any> {
+    return this.api.request('PUT', `/sheets/${sheetId}/shares/${shareId}`, { accessLevel });
+  }
+
+  async removeShare(sheetId: string, shareId: string): Promise<any> {
+    return this.api.request('DELETE', `/sheets/${sheetId}/shares/${shareId}`);
+  }
+
   async attachUrl(sheetId: string, url: string, name: string, rowId?: string): Promise<any> {
     const endpoint = rowId
       ? `/sheets/${sheetId}/rows/${rowId}/attachments`

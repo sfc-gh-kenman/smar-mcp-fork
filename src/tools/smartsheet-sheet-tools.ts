@@ -381,6 +381,26 @@ export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDelete
         );
       }
       
+      // Tool: remove_share (conditionally registered)
+      if (allowDeleteTools) {
+        server.tool(
+          "remove_share",
+          "Removes a user's share/access from a sheet. Requires ALLOW_DELETE_TOOLS=true.",
+          {
+            sheetId: z.string().regex(/^\d+$/, "Must be a numeric ID").describe("The ID of the sheet"),
+            shareId: z.string().describe("The ID of the share to remove (from list_shares)"),
+          },
+          async ({ sheetId, shareId }) => {
+            try {
+              const result = await api.sheets.removeShare(sheetId, shareId);
+              return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+            } catch (error: any) {
+              return { content: [{ type: "text", text: `Failed to remove share: ${error.message}` }], isError: true };
+            }
+          }
+        );
+      }
+
       // Tool: Get Sheet Location
       server.tool(
         "get_sheet_location",
@@ -606,7 +626,7 @@ export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDelete
         const guide = {
           description: "Smartsheet MCP Server — available tool categories",
           read: ["get_sheet", "get_sheet_by_url", "get_row", "get_columns", "get_sheet_summary", "find_in_sheet", "list_shares", "get_folder", "browse_folder", "get_workspace", "browse_workspace", "get_workspaces", "list_workspaces", "get_report", "get_report_by_url", "get_dashboard", "get_dashboard_by_url", "get_discussion", "get_discussions_by_sheet_id", "get_discussions_by_row_id", "list_row_discussions", "get_cell_history", "get_current_user", "get_user"],
-          write: ["add_rows", "update_rows", "delete_rows", "delete_sheet", "add_columns", "delete_column", "attach_url", "create_report", "create_sheet_in_folder", "create_sheet_in_workspace", "create_sheet", "create_folder", "create_workspace", "create_row_discussion", "create_discussion_on_row", "create_sheet_discussion", "add_comment", "delete_discussion", "create_update_request"],
+          write: ["add_rows", "update_rows", "delete_rows", "delete_sheet", "add_columns", "delete_column", "attach_url", "create_report", "create_sheet_in_folder", "create_sheet_in_workspace", "create_sheet", "create_folder", "create_workspace", "create_row_discussion", "create_discussion_on_row", "create_sheet_discussion", "add_comment", "delete_discussion", "create_update_request", "share_sheet", "update_share", "remove_share"],
           search: ["search", "search_sheets", "search_in_sheet", "search_workspaces", "search_folders", "search_reports", "search_dashboards"],
           tip: "Use get_workspaces or list_workspaces to discover sheet IDs, then get_sheet to read content.",
         };
@@ -643,6 +663,55 @@ export function getSheetTools(server: McpServer, api: SmartsheetAPI, allowDelete
           return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
         } catch (error: any) {
           return { content: [{ type: "text", text: `Failed to list shares: ${error.message}` }], isError: true };
+        }
+      }
+    );
+
+    // Tool: share_sheet
+    server.tool(
+      "share_sheet",
+      "Shares a sheet with a user by email, granting VIEWER or EDITOR access. ADMIN access requires elevated account privileges (Smartsheet sheet/workspace admin or owner) — requests for ADMIN will be attempted but may fail with a 'not authorized' error depending on the caller's own permissions.",
+      {
+        sheetId: z.string().regex(/^\d+$/, "Must be a numeric ID").describe("The ID of the sheet to share"),
+        email: z.string().email().describe("Email address of the user to share with"),
+        accessLevel: z.enum(["VIEWER", "EDITOR", "ADMIN"]).describe("Access level to grant. ADMIN requires elevated privileges and may be rejected by the API for non-admin callers."),
+        ccMe: z.boolean().optional().describe("If true, sends a copy of the share notification email to the caller"),
+      },
+      async ({ sheetId, email, accessLevel, ccMe }) => {
+        try {
+          console.info(`Sharing sheet ${sheetId} with ${email} at ${accessLevel} access`);
+          const result = await api.sheets.shareSheet(sheetId, email, accessLevel, ccMe);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          const note = accessLevel === "ADMIN"
+            ? " Note: ADMIN-level shares require elevated privileges on this sheet/account — try VIEWER or EDITOR instead."
+            : "";
+          console.error(`Failed to share sheet ${sheetId} with ${email}`, { error });
+          return { content: [{ type: "text", text: `Failed to share sheet: ${error.message}${note}` }], isError: true };
+        }
+      }
+    );
+
+    // Tool: update_share
+    server.tool(
+      "update_share",
+      "Updates the access level of an existing sheet share. ADMIN access requires elevated account privileges and may be rejected depending on the caller's own permissions.",
+      {
+        sheetId: z.string().regex(/^\d+$/, "Must be a numeric ID").describe("The ID of the sheet"),
+        shareId: z.string().describe("The ID of the share to update (from list_shares)"),
+        accessLevel: z.enum(["VIEWER", "EDITOR", "ADMIN"]).describe("New access level. ADMIN requires elevated privileges and may be rejected by the API for non-admin callers."),
+      },
+      async ({ sheetId, shareId, accessLevel }) => {
+        try {
+          console.info(`Updating share ${shareId} on sheet ${sheetId} to ${accessLevel}`);
+          const result = await api.sheets.updateShare(sheetId, shareId, accessLevel);
+          return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+        } catch (error: any) {
+          const note = accessLevel === "ADMIN"
+            ? " Note: ADMIN-level shares require elevated privileges on this sheet/account — try VIEWER or EDITOR instead."
+            : "";
+          console.error(`Failed to update share ${shareId} on sheet ${sheetId}`, { error });
+          return { content: [{ type: "text", text: `Failed to update share: ${error.message}${note}` }], isError: true };
         }
       }
     );
